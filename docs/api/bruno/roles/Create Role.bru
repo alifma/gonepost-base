@@ -1,0 +1,18 @@
+meta {
+  name: Create Role
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roles
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "MEMBER_VIEWER",
+    "description": "read-only access to users"
+  }
+}

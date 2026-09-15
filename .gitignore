@@ -1,0 +1,25 @@
+# Go
+__debug_bin*
+*.exe
+*.test
+/apps/api/bin/
+
+# Node / web
+node_modules/
+.next/
+dist/
+build/
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/

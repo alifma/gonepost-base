@@ -1,0 +1,22 @@
+meta {
+  name: Update User
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: REPLACE_WITH_USER_ID
+}
+
+body:json {
+  {
+    "full_name": "Updated Name",
+    "status": "active"
+  }
+}

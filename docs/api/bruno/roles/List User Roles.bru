@@ -1,0 +1,15 @@
+meta {
+  name: List User Roles
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/:userId/roles
+  body: none
+  auth: none
+}
+
+params:path {
+  userId: REPLACE_WITH_USER_ID
+}

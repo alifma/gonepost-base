@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-basecode}
+      POSTGRES_USER: ${POSTGRES_USER:-basecode}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-basecode}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-basecode} -d ${POSTGRES_DB:-basecode}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Disposable database for integration tests. Separate container and port
+  # from `postgres` so tests never touch development data. No named volume:
+  # data does not need to survive a restart.
+  postgres_test:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${TEST_POSTGRES_DB:-basecode_test}
+      POSTGRES_USER: ${POSTGRES_USER:-basecode}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-basecode}
+    ports:
+      - "${TEST_POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-basecode} -d ${TEST_POSTGRES_DB:-basecode_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

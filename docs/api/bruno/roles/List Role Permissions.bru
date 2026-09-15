@@ -1,0 +1,15 @@
+meta {
+  name: List Role Permissions
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/roles/:roleId/permissions
+  body: none
+  auth: none
+}
+
+params:path {
+  roleId: REPLACE_WITH_ROLE_ID
+}

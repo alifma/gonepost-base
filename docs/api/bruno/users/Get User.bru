@@ -1,0 +1,15 @@
+meta {
+  name: Get User
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: REPLACE_WITH_USER_ID
+}

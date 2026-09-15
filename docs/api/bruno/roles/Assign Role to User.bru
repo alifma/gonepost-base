@@ -1,0 +1,21 @@
+meta {
+  name: Assign Role to User
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/users/:userId/roles
+  body: json
+  auth: none
+}
+
+params:path {
+  userId: REPLACE_WITH_USER_ID
+}
+
+body:json {
+  {
+    "role_id": "REPLACE_WITH_ROLE_ID"
+  }
+}

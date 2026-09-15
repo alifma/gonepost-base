@@ -1,0 +1,21 @@
+meta {
+  name: Grant Permission
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roles/:roleId/permissions
+  body: json
+  auth: none
+}
+
+params:path {
+  roleId: REPLACE_WITH_ROLE_ID
+}
+
+body:json {
+  {
+    "code": "users:read"
+  }
+}

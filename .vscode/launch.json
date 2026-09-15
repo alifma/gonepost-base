@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug API (cmd/api)",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/apps/api/cmd/api",
+      "cwd": "${workspaceFolder}/apps/api",
+      "env": {
+        "APP_ENV": "local",
+        "PORT": "8080",
+        "DATABASE_URL": "postgres://basecode:basecode@localhost:5432/basecode?sslmode=disable"
+      }
+    },
+    {
+      "name": "Debug current Go test file",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}"
+    }
+  ]
+}

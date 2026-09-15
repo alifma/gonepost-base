@@ -1,0 +1,16 @@
+meta {
+  name: Remove Role from User
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/users/:userId/roles/:roleId
+  body: none
+  auth: none
+}
+
+params:path {
+  userId: REPLACE_WITH_USER_ID
+  roleId: REPLACE_WITH_ROLE_ID
+}

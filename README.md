@@ -1,6 +1,6 @@
-# basecode
+# Gonepost
 
-Production baseline: Go API + PostgreSQL + OpenAPI contract + auth/RBAC/audit-log built in. Frontend (`apps/web`) belum digarap — lihat `PLAN.md`.
+**Go** + **Next.js** + **Postgres** — production baseline dengan auth, RBAC, dan audit-log built in. Frontend (`apps/web`) belum digarap.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ Pastiin `$(go env GOPATH)/bin` ada di `PATH`.
 
 ```bash
 git clone <repo-url>
-cd basecode
+cd gonepost
 ```
 
 ```bash
@@ -99,4 +99,23 @@ make openapi-validate       # gagal kalau spec berubah tapi belum di-regenerate
 
 ## Struktur
 
-Lihat `PLAN.md` buat detail arsitektur, ownership boundary antar `apps/web`/`apps/api`, dan roadmap fase yang belum digarap (testing baseline lanjutan, CI, branding, frontend).
+```text
+apps/
+├── web/          # Next.js dashboard (belum digarap)
+└── api/          # Go API — satu-satunya yang boleh akses PostgreSQL
+    ├── cmd/api/           # entry point
+    ├── internal/
+    │   ├── platform/      # infra generik (db, http, logger, security, dst)
+    │   └── modules/        # domain: auth, users, roles, permissions, auditlog
+    ├── migrations/
+    ├── openapi/           # kontrak API — source of truth
+    └── seeds/
+packages/
+└── api-client/   # TypeScript client, generated dari openapi.yaml
+infrastructure/
+└── compose/      # docker-compose PostgreSQL
+docs/
+└── api/bruno/    # Bruno collection buat coba API
+```
+
+`apps/web` cuma boleh manggil API lewat `packages/api-client` — gak ada akses database langsung dari frontend. Otorisasi backend selalu jadi sumber kebenaran; permission check di frontend (kalau ada nanti) cuma buat UX.

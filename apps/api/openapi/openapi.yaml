@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Basecode API
+  title: Gonepost API
   version: 0.1.0
   description: >
     API contract for the basecode project. This spec is the source of truth:

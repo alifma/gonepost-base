@@ -7,35 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"basecode/api/tests/testutil"
 )
 
-func newTestPool(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	pool, err := pgxpool.New(context.Background(), "postgres://basecode:basecode@localhost:5432/basecode?sslmode=disable")
-	if err != nil {
-		t.Fatalf("failed to connect: %v", err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
-
-func createTestUser(t *testing.T, pool *pgxpool.Pool, email string) string {
-	t.Helper()
-	var id string
-	err := pool.QueryRow(context.Background(),
-		"INSERT INTO users (email, password_hash, status) VALUES (lower($1), 'x', 'active') RETURNING id", email).Scan(&id)
-	if err != nil {
-		t.Fatalf("failed to create test user: %v", err)
-	}
-	t.Cleanup(func() {
-		pool.Exec(context.Background(), "DELETE FROM users WHERE id = $1", id)
-	})
-	return id
-}
-
 func TestRepository_RoleAndPermissionLifecycle(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 	ctx := context.Background()
 	roleName := fmt.Sprintf("TEST_ROLE_%s", t.Name())
@@ -69,7 +45,7 @@ func TestRepository_RoleAndPermissionLifecycle(t *testing.T) {
 		t.Errorf("expected [%s], got %v", permCode, codes)
 	}
 
-	userID := createTestUser(t, pool, fmt.Sprintf("test-%s@example.com", t.Name()))
+	userID := testutil.CreateUser(t, pool, fmt.Sprintf("test-%s@example.com", t.Name()))
 
 	has, err := repo.UserHasPermission(ctx, userID, permCode)
 	if err != nil {

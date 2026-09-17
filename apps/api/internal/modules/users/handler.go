@@ -90,6 +90,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	filter := ListFilter{
 		Status: Status(q.Get("status")),
+		Search: q.Get("search"),
 		Limit:  atoiDefault(q.Get("limit"), 20),
 		Offset: atoiDefault(q.Get("offset"), 0),
 	}

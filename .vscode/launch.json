@@ -11,6 +11,7 @@
       "env": {
         "APP_ENV": "local",
         "PORT": "8080",
+        "CORS_ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
         "DATABASE_URL": "postgres://basecode:basecode@localhost:5432/basecode?sslmode=disable"
       }
     },
@@ -20,6 +21,19 @@
       "request": "launch",
       "mode": "test",
       "program": "${fileDirname}"
+    },
+    {
+      "name": "Run Web (Next.js)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/apps/web"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run Local Stack",
+      "configurations": ["Debug API (cmd/api)", "Run Web (Next.js)"]
     }
   ]
 }

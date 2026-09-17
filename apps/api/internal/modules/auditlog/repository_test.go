@@ -6,21 +6,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"basecode/api/tests/testutil"
 )
 
-func newTestPool(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	pool, err := pgxpool.New(context.Background(), "postgres://basecode:basecode@localhost:5432/basecode?sslmode=disable")
-	if err != nil {
-		t.Fatalf("failed to connect: %v", err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
-
 func TestRepository_InsertAndList(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 	ctx := context.Background()
 

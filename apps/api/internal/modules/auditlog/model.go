@@ -12,17 +12,18 @@ const (
 // Action codes: "resource.verb", parallel to permission codes but for
 // events, not access checks.
 const (
-	ActionLogin           = "auth.login"
-	ActionLogout          = "auth.logout"
-	ActionPasswordChange  = "auth.password_change"
-	ActionBootstrapAdmin  = "auth.bootstrap_admin"
-	ActionUserCreate      = "user.create"
-	ActionUserUpdate      = "user.update"
-	ActionRoleCreate      = "role.create"
-	ActionPermissionGrant = "role.permission_grant"
-	ActionUserRoleAssign  = "role.user_assign"
-	ActionUserRoleRemove  = "role.user_remove"
-	ActionAuthzDenied     = "authz.denied"
+	ActionLogin            = "auth.login"
+	ActionLogout           = "auth.logout"
+	ActionPasswordChange   = "auth.password_change"
+	ActionBootstrapAdmin   = "auth.bootstrap_admin"
+	ActionUserCreate       = "user.create"
+	ActionUserUpdate       = "user.update"
+	ActionRoleCreate       = "role.create"
+	ActionPermissionGrant  = "role.permission_grant"
+	ActionPermissionRevoke = "role.permission_revoke"
+	ActionUserRoleAssign   = "role.user_assign"
+	ActionUserRoleRemove   = "role.user_remove"
+	ActionAuthzDenied      = "authz.denied"
 )
 
 type Event struct {

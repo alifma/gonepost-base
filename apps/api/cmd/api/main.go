@@ -120,6 +120,9 @@ func main() {
 	mux.Handle("POST /api/v1/roles/{id}/permissions", requireAuth(requireRolesWrite(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rolesHandler.GrantPermission(w, r, r.PathValue("id"))
 	}))))
+	mux.Handle("DELETE /api/v1/roles/{id}/permissions/{code}", requireAuth(requireRolesWrite(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rolesHandler.RevokePermission(w, r, r.PathValue("id"), r.PathValue("code"))
+	}))))
 	mux.Handle("GET /api/v1/roles/{id}/permissions", requireAuth(requireRolesRead(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rolesHandler.ListPermissions(w, r, r.PathValue("id"))
 	}))))

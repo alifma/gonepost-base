@@ -242,6 +242,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/roles/{id}/permissions/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a permission from a role */
+        delete: operations["revokePermissionFromRole"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-logs": {
         parameters: {
             query?: never;
@@ -616,6 +633,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: components["schemas"]["UserStatus"];
+                search?: string;
                 limit?: number;
                 offset?: number;
             };
@@ -920,6 +938,36 @@ export interface operations {
         };
         responses: {
             /** @description Granted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Permission code not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revokePermissionFromRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked */
             204: {
                 headers: {
                     [name: string]: unknown;

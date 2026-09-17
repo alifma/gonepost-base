@@ -9,6 +9,13 @@ node_modules/
 .next/
 dist/
 build/
+coverage/
+.turbo/
+*.tsbuildinfo
+*.log
+apps/web/bun.lock
+apps/web/.agents/
+apps/web/.claude/
 
 # Env
 .env

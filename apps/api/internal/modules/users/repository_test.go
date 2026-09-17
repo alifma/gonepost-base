@@ -4,34 +4,16 @@ package users
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"basecode/api/tests/testutil"
 )
 
-func newTestPool(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	pool, err := pgxpool.New(context.Background(), "postgres://basecode:basecode@localhost:5432/basecode?sslmode=disable")
-	if err != nil {
-		t.Fatalf("failed to connect: %v", err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
-
-// uniqueEmail returns a lowercase email — Create stores email as
-// lower(email), so tests must compare against the same casing.
-func uniqueEmail(t *testing.T) string {
-	return strings.ToLower(fmt.Sprintf("test-%s@example.com", t.Name()))
-}
-
 func TestRepository_CreateAndGet(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 	ctx := context.Background()
-	email := uniqueEmail(t)
+	email := testutil.UniqueEmail(t)
 
 	created, err := repo.Create(ctx, User{
 		Email:        email,
@@ -67,10 +49,10 @@ func TestRepository_CreateAndGet(t *testing.T) {
 }
 
 func TestRepository_CreateDuplicateEmail(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 	ctx := context.Background()
-	email := uniqueEmail(t)
+	email := testutil.UniqueEmail(t)
 
 	created, err := repo.Create(ctx, User{Email: email, PasswordHash: "fake-hash", Status: StatusActive})
 	if err != nil {
@@ -87,7 +69,7 @@ func TestRepository_CreateDuplicateEmail(t *testing.T) {
 }
 
 func TestRepository_GetByEmail_NotFound(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 
 	_, err := repo.GetByEmail(context.Background(), "does-not-exist@example.com")
@@ -97,10 +79,10 @@ func TestRepository_GetByEmail_NotFound(t *testing.T) {
 }
 
 func TestRepository_UpdateAndList(t *testing.T) {
-	pool := newTestPool(t)
+	pool := testutil.NewPool(t)
 	repo := NewRepository(pool)
 	ctx := context.Background()
-	email := uniqueEmail(t)
+	email := testutil.UniqueEmail(t)
 
 	created, err := repo.Create(ctx, User{Email: email, PasswordHash: "fake-hash", Status: StatusActive})
 	if err != nil {

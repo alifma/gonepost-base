@@ -108,6 +108,12 @@ func (r *Repository) GrantPermission(ctx context.Context, roleID, permissionID s
 	return err
 }
 
+func (r *Repository) RevokePermission(ctx context.Context, roleID, permissionID string) error {
+	const q = `DELETE FROM role_permissions WHERE role_id = $1 AND permission_id = $2`
+	_, err := r.pool.Exec(ctx, q, roleID, permissionID)
+	return err
+}
+
 func (r *Repository) ListRolePermissions(ctx context.Context, roleID string) ([]string, error) {
 	const q = `
 		SELECT p.code FROM permissions p

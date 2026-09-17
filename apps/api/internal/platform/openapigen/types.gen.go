@@ -184,6 +184,7 @@ type ListAuditLogsParams struct {
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Status *UserStatus `form:"status,omitempty" json:"status,omitempty"`
+	Search *string     `form:"search,omitempty" json:"search,omitempty"`
 	Limit  *int        `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int        `form:"offset,omitempty" json:"offset,omitempty"`
 }

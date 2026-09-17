@@ -191,6 +191,10 @@ paths:
           in: query
           schema:
             $ref: "#/components/schemas/UserStatus"
+        - name: search
+          in: query
+          schema:
+            type: string
         - name: limit
           in: query
           schema:
@@ -441,6 +445,33 @@ paths:
       responses:
         "204":
           description: Granted
+        "404":
+          description: Permission code not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /api/v1/roles/{id}/permissions/{code}:
+    delete:
+      operationId: revokePermissionFromRole
+      summary: Revoke a permission from a role
+      tags: [roles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Revoked
         "404":
           description: Permission code not found
           content:

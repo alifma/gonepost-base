@@ -80,6 +80,7 @@ make db-up / make db-down / make db-logs
 
 # Development
 make dev-api
+make dev-web
 
 # Quality
 make lint-api

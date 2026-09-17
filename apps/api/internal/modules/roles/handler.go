@@ -141,6 +141,26 @@ func (h *Handler) ListPermissions(w http.ResponseWriter, r *http.Request, roleID
 	httpx.WriteJSON(w, http.StatusOK, codes)
 }
 
+func (h *Handler) RevokePermission(w http.ResponseWriter, r *http.Request, roleID, code string) {
+	perm, err := h.repo.GetPermissionByCode(r.Context(), code)
+	if err != nil {
+		if errors.Is(err, ErrPermissionNotFound) {
+			httpx.WriteError(w, http.StatusNotFound, "not_found", "permission not found")
+			return
+		}
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "something went wrong")
+		return
+	}
+	if err := h.repo.RevokePermission(r.Context(), roleID, perm.ID); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "something went wrong")
+		return
+	}
+	if !h.recordActorEvent(w, r, auditlog.ActionPermissionRevoke, "role", &roleID) {
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 type assignRoleRequest struct {
 	RoleID string `json:"role_id" validate:"required"`
 }

@@ -25,6 +25,9 @@ func TestCORS_AllowedOrigin(t *testing.T) {
 	if rec.Header().Get("Access-Control-Allow-Methods") == "" {
 		t.Errorf("expected Access-Control-Allow-Methods header to be non-empty")
 	}
+	if rec.Header().Get("Access-Control-Allow-Credentials") != "true" {
+		t.Errorf("expected credentialed CORS to be enabled")
+	}
 }
 
 func TestCORS_Preflight(t *testing.T) {

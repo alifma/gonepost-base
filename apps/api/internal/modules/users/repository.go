@@ -22,6 +22,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 
 type ListFilter struct {
 	Status Status // empty means no filter
+	Search string // matches email, username, or full name
 	Limit  int
 	Offset int
 }
@@ -74,30 +75,22 @@ func (r *Repository) List(ctx context.Context, f ListFilter) ([]User, int, error
 		f.Limit = 20
 	}
 
-	const countAll = `SELECT count(*) FROM users`
-	const countByStatus = `SELECT count(*) FROM users WHERE status = $1`
-	const listAll = `
+	const countQuery = `
+		SELECT count(*) FROM users
+		WHERE ($1 = '' OR email ILIKE '%' || $1 || '%' OR username ILIKE '%' || $1 || '%' OR full_name ILIKE '%' || $1 || '%')
+		AND ($2 = '' OR status = $2)`
+	const listQuery = `
 		SELECT id, email, username, full_name, password_hash, status, created_at, updated_at
-		FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2`
-	const listByStatus = `
-		SELECT id, email, username, full_name, password_hash, status, created_at, updated_at
-		FROM users WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+		FROM users
+		WHERE ($1 = '' OR email ILIKE '%' || $1 || '%' OR username ILIKE '%' || $1 || '%' OR full_name ILIKE '%' || $1 || '%')
+		AND ($2 = '' OR status = $2)
+		ORDER BY created_at DESC LIMIT $3 OFFSET $4`
 
 	var total int
-	var rows pgx.Rows
-	var err error
-
-	if f.Status == "" {
-		if err := r.pool.QueryRow(ctx, countAll).Scan(&total); err != nil {
-			return nil, 0, err
-		}
-		rows, err = r.pool.Query(ctx, listAll, f.Limit, f.Offset)
-	} else {
-		if err := r.pool.QueryRow(ctx, countByStatus, f.Status).Scan(&total); err != nil {
-			return nil, 0, err
-		}
-		rows, err = r.pool.Query(ctx, listByStatus, f.Status, f.Limit, f.Offset)
+	if err := r.pool.QueryRow(ctx, countQuery, f.Search, f.Status).Scan(&total); err != nil {
+		return nil, 0, err
 	}
+	rows, err := r.pool.Query(ctx, listQuery, f.Search, f.Status, f.Limit, f.Offset)
 	if err != nil {
 		return nil, 0, err
 	}

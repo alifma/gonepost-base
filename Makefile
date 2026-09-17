@@ -6,6 +6,7 @@ MIGRATIONS_DIR := apps/api/migrations
 
 .PHONY: db-up db-down db-logs \
 	dev-api build-api lint-api test-api test-integration-api \
+	dev-web \
 	db-migrate db-rollback db-status db-migrate-create db-seed \
 	openapi-generate api-client-generate openapi-validate
 
@@ -24,6 +25,9 @@ db-logs:
 
 dev-api:
 	cd apps/api && go run ./cmd/api
+
+dev-web:
+	cd apps/web && npm run dev
 
 build-api:
 	cd apps/api && go build -o bin/api ./cmd/api

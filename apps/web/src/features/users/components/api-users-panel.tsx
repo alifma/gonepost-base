@@ -14,10 +14,13 @@ import {
 import { api } from '@/lib/api-client';
 import { useEffect, useState } from 'react';
 import type { components } from '@gonepost/api-client';
+import { toast } from 'sonner';
 
 type User = components['schemas']['User'];
 
 type UserList = components['schemas']['UserListResponse'];
+type Role = components['schemas']['Role'];
+type UserStatus = components['schemas']['UserStatus'];
 
 export default function ApiUsersPanel() {
   const [users, setUsers] = useState<User[]>([]);
@@ -29,6 +32,15 @@ export default function ApiUsersPanel() {
   const [fullName, setFullName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isRolesOpen, setIsRolesOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [userRoles, setUserRoles] = useState<Role[]>([]);
+  const [editName, setEditName] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editStatus, setEditStatus] = useState<UserStatus>('active');
+  const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -52,7 +64,79 @@ export default function ApiUsersPanel() {
 
   useEffect(() => {
     void loadUsers();
+    void loadRoles();
   }, []);
+
+  async function loadRoles() {
+    const response = await api.GET('/api/v1/roles', { credentials: 'include' });
+    if (!response.error) setRoles(response.data);
+  }
+
+  function openEdit(user: User) {
+    setSelectedUser(user);
+    setEditName(user.full_name ?? '');
+    setEditUsername(user.username ?? '');
+    setEditStatus(user.status);
+    setIsEditOpen(true);
+  }
+
+  async function saveUser(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUser) return;
+    setIsSaving(true);
+    setError('');
+    const response = await api.PATCH('/api/v1/users/{id}', {
+      credentials: 'include',
+      params: { path: { id: selectedUser.id } },
+      body: { full_name: editName, username: editUsername, status: editStatus }
+    });
+    if (response.error) {
+      setError('User gagal diubah. Periksa permission users:write.');
+      toast.error('User gagal diubah');
+    } else {
+      setIsEditOpen(false);
+      toast.success('User berhasil diubah');
+      await loadUsers();
+    }
+    setIsSaving(false);
+  }
+
+  async function openRoles(user: User) {
+    setSelectedUser(user);
+    setIsRolesOpen(true);
+    const response = await api.GET('/api/v1/users/{id}/roles', {
+      credentials: 'include', params: { path: { id: user.id } }
+    });
+    if (response.error) { setUserRoles([]); setError('Role user gagal dimuat.'); }
+    else setUserRoles(Array.isArray(response.data) ? response.data : []);
+  }
+
+  async function toggleUserRole(role: Role) {
+    if (!selectedUser) return;
+    setIsSaving(true);
+    const assigned = userRoles.some((currentRole) => currentRole.id === role.id);
+    if (assigned && !window.confirm(`Remove ${role.name} from this user?`)) {
+      setIsSaving(false);
+      return;
+    }
+    const response = assigned
+      ? await api.DELETE('/api/v1/users/{id}/roles/{roleId}', {
+          credentials: 'include', params: { path: { id: selectedUser.id, roleId: role.id } }
+        })
+      : await api.POST('/api/v1/users/{id}/roles', {
+          credentials: 'include', params: { path: { id: selectedUser.id } }, body: { role_id: role.id }
+        });
+    if (response.error) {
+      setError('Role user gagal diubah. Backend menolak perubahan ini.');
+      toast.error('Role user gagal diubah');
+    } else {
+      setUserRoles((currentRoles) => assigned
+        ? currentRoles.filter((currentRole) => currentRole.id !== role.id)
+        : [...currentRoles, role]);
+      toast.success(assigned ? 'Role dicabut' : 'Role diberikan');
+    }
+    setIsSaving(false);
+  }
 
   async function createUser(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,11 +148,13 @@ export default function ApiUsersPanel() {
     });
     if (response.error) {
       setError('User gagal dibuat. Periksa permission atau data input.');
+      toast.error('User gagal dibuat');
     } else {
       setEmail('');
       setPassword('');
       setFullName('');
       setIsCreateOpen(false);
+      toast.success('User berhasil dibuat');
       await loadUsers();
     }
     setIsCreating(false);
@@ -116,6 +202,7 @@ export default function ApiUsersPanel() {
                 <th className='px-5 py-3 font-medium'>User</th>
                 <th className='px-5 py-3 font-medium'>Status</th>
                 <th className='px-5 py-3 font-medium'>Created</th>
+                <th className='px-5 py-3 font-medium'>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -127,11 +214,17 @@ export default function ApiUsersPanel() {
                   </td>
                   <td className='px-5 py-3 capitalize'>{user.status}</td>
                   <td className='text-muted-foreground px-5 py-3'>{new Date(user.created_at).toLocaleDateString()}</td>
+                  <td className='px-5 py-3'>
+                    <div className='flex gap-2'>
+                      <Button variant='outline' size='sm' onClick={() => openEdit(user)}>Edit</Button>
+                      <Button variant='outline' size='sm' onClick={() => void openRoles(user)}>Roles</Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
               {!isLoading && users.length === 0 && (
                 <tr>
-                  <td colSpan={3} className='text-muted-foreground px-5 py-8 text-center'>
+                  <td colSpan={4} className='text-muted-foreground px-5 py-8 text-center'>
                     No users found.
                   </td>
                 </tr>
@@ -171,6 +264,29 @@ export default function ApiUsersPanel() {
               <Button type='submit' disabled={isCreating}>{isCreating ? 'Creating...' : 'Create user'}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+            <DialogDescription>Update profile fields and account status.</DialogDescription>
+          </DialogHeader>
+          <form className='grid gap-4' onSubmit={saveUser}>
+            <div className='grid gap-2'><Label htmlFor='edit-full-name'>Full name</Label><Input id='edit-full-name' value={editName} onChange={(event) => setEditName(event.target.value)} /></div>
+            <div className='grid gap-2'><Label htmlFor='edit-username'>Username</Label><Input id='edit-username' value={editUsername} onChange={(event) => setEditUsername(event.target.value)} /></div>
+            <div className='grid gap-2'><Label htmlFor='edit-status'>Status</Label><select id='edit-status' className='border-input bg-background h-9 rounded-lg border px-3 text-sm' value={editStatus} onChange={(event) => setEditStatus(event.target.value as UserStatus)}><option value='active'>Active</option><option value='inactive'>Inactive</option><option value='suspended'>Suspended</option></select></div>
+            <DialogFooter><Button type='submit' disabled={isSaving}>{isSaving ? 'Saving...' : 'Save changes'}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isRolesOpen} onOpenChange={setIsRolesOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Roles: {selectedUser?.email}</DialogTitle><DialogDescription>Assign or remove roles for this user.</DialogDescription></DialogHeader>
+          <div className='grid gap-3'>{roles.map((role) => { const assigned = userRoles.some((currentRole) => currentRole.id === role.id); return <label key={role.id} className='border-border/70 flex items-center gap-3 rounded-lg border p-3 text-sm'><input type='checkbox' checked={assigned} disabled={isSaving} onChange={() => void toggleUserRole(role)} /><span className='flex-1'>{role.name}</span>{role.is_system && <span className='text-muted-foreground text-xs'>System</span>}</label>; })}</div>
+          <DialogFooter showCloseButton />
         </DialogContent>
       </Dialog>
     </div>

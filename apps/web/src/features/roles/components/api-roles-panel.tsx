@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api-client';
 import type { components } from '@gonepost/api-client';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 type Role = components['schemas']['Role'];
 const permissions = ['users:read', 'users:write', 'roles:read', 'roles:write', 'audit:read'];
@@ -40,8 +41,14 @@ export default function ApiRolesPanel() {
     const response = await api.POST('/api/v1/roles', {
       credentials: 'include', body: { name, description: description || undefined }
     });
-    if (response.error) setError('Role gagal dibuat. Pastikan akun memiliki roles:write.');
-    else { setName(''); setDescription(''); setIsCreateOpen(false); await loadRoles(); }
+    if (response.error) {
+      setError('Role gagal dibuat. Pastikan akun memiliki roles:write.');
+      toast.error('Role gagal dibuat');
+    } else {
+      setName(''); setDescription(''); setIsCreateOpen(false);
+      toast.success('Role berhasil dibuat');
+      await loadRoles();
+    }
     setIsSaving(false);
   }
 
@@ -58,19 +65,28 @@ export default function ApiRolesPanel() {
   async function togglePermission(permission: string) {
     if (!selectedRole) return;
     setIsSaving(true);
-    const response = rolePermissions.includes(permission)
+    const assigned = rolePermissions.includes(permission);
+    if (assigned && !window.confirm(`Revoke ${permission} from this role?`)) {
+      setIsSaving(false);
+      return;
+    }
+    const response = assigned
       ? await api.DELETE('/api/v1/roles/{id}/permissions/{code}', {
           credentials: 'include', params: { path: { id: selectedRole.id, code: permission } }
         })
       : await api.POST('/api/v1/roles/{id}/permissions', {
           credentials: 'include', params: { path: { id: selectedRole.id } }, body: { code: permission }
         });
-    if (response.error) setError(`Permission ${permission} gagal diubah.`);
+    if (response.error) {
+      setError(`Permission ${permission} gagal diubah.`);
+      toast.error('Permission gagal diubah');
+    }
     else {
       setRolePermissions((current) => current.includes(permission)
         ? current.filter((currentPermission) => currentPermission !== permission)
         : [...current, permission]);
       setError('');
+      toast.success(assigned ? 'Permission dicabut' : 'Permission diberikan');
     }
     setIsSaving(false);
   }

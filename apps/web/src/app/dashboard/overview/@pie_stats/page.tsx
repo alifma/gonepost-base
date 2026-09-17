@@ -1,4 +1,4 @@
-import { delay } from '@/constants/mock-api';
+import { delay } from '@/lib/delay';
 import { PieGraph } from '@/features/overview/components/pie-graph';
 
 export default async function Stats() {

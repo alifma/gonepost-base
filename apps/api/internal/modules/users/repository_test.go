@@ -121,3 +121,41 @@ func TestRepository_UpdateAndList(t *testing.T) {
 		t.Errorf("expected total >= 1, got %d", total)
 	}
 }
+
+func TestRepository_ListSearchAndPagination(t *testing.T) {
+	pool := testutil.NewPool(t)
+	repo := NewRepository(pool)
+	ctx := context.Background()
+	firstEmail := testutil.UniqueEmail(t) + "-first@example.com"
+	secondEmail := testutil.UniqueEmail(t) + "-second@example.com"
+
+	first, err := repo.Create(ctx, User{Email: firstEmail, FullName: stringPtr("Searchable Alpha"), PasswordHash: "fake-hash", Status: StatusActive})
+	if err != nil {
+		t.Fatalf("first Create failed: %v", err)
+	}
+	second, err := repo.Create(ctx, User{Email: secondEmail, FullName: stringPtr("Searchable Beta"), PasswordHash: "fake-hash", Status: StatusActive})
+	if err != nil {
+		t.Fatalf("second Create failed: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, "DELETE FROM users WHERE id IN ($1, $2)", first.ID, second.ID)
+	})
+
+	list, total, err := repo.List(ctx, ListFilter{Search: "Searchable", Limit: 1, Offset: 0})
+	if err != nil {
+		t.Fatalf("search failed: %v", err)
+	}
+	if total != 2 || len(list) != 1 {
+		t.Fatalf("expected 2 matches and one paginated row, got total=%d rows=%d", total, len(list))
+	}
+
+	list, _, err = repo.List(ctx, ListFilter{Search: "Beta", Limit: 10})
+	if err != nil {
+		t.Fatalf("second search failed: %v", err)
+	}
+	if len(list) != 1 || list[0].ID != second.ID {
+		t.Fatalf("expected beta user, got %+v", list)
+	}
+}
+
+func stringPtr(value string) *string { return &value }

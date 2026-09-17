@@ -45,6 +45,20 @@ func TestRepository_RoleAndPermissionLifecycle(t *testing.T) {
 		t.Errorf("expected [%s], got %v", permCode, codes)
 	}
 
+	if err := repo.RevokePermission(ctx, role.ID, perm.ID); err != nil {
+		t.Fatalf("RevokePermission failed: %v", err)
+	}
+	codes, err = repo.ListRolePermissions(ctx, role.ID)
+	if err != nil {
+		t.Fatalf("ListRolePermissions after revoke failed: %v", err)
+	}
+	if len(codes) != 0 {
+		t.Errorf("expected permission to be revoked, got %v", codes)
+	}
+	if err := repo.GrantPermission(ctx, role.ID, perm.ID); err != nil {
+		t.Fatalf("GrantPermission after revoke failed: %v", err)
+	}
+
 	userID := testutil.CreateUser(t, pool, fmt.Sprintf("test-%s@example.com", t.Name()))
 
 	has, err := repo.UserHasPermission(ctx, userID, permCode)

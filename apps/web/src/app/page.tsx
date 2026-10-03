@@ -2,6 +2,7 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { ThemeModeToggle } from '@/components/themes/theme-mode-toggle';
 import { ScrollReveal } from '@/components/scroll-reveal';
+import { MadeWithLove } from '@/components/layout/made-with-love';
 import Link from 'next/link';
 
 export const metadata = {
@@ -110,6 +111,7 @@ export default async function Page() {
       <footer className='border-border/70 border-t'>
         <div className='mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-8 text-sm sm:flex-row sm:items-center sm:justify-between lg:px-10'>
           <span className='text-muted-foreground'>Gonepost / Operations workspace</span>
+          <MadeWithLove />
           <Link href='/auth/sign-in' className='text-foreground font-medium hover:underline'>Enter the workspace <span aria-hidden='true'>-&gt;</span></Link>
         </div>
       </footer>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Heading } from '../ui/heading';
+import { MadeWithLove } from './made-with-love';
 import type { InfobarContent } from '@/components/ui/infobar';
 
 function PageSkeleton() {
@@ -69,6 +70,9 @@ export default function PageContainer({
         </div>
       )}
       {content}
+      <footer className='mt-auto flex justify-center pt-6'>
+        <MadeWithLove />
+      </footer>
     </div>
   );
 }

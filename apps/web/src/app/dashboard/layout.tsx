@@ -26,7 +26,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Persisting the sidebar state in the cookie.
   const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
+  // Open on the first visit; after that follow the saved state.
+  const saved = cookieStore.get('sidebar_state')?.value;
+  const defaultOpen = saved === undefined ? true : saved === 'true';
   return (
     <KBar>
       <SidebarProvider defaultOpen={defaultOpen}>

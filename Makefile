@@ -27,7 +27,7 @@ dev-api:
 	cd apps/api && go run ./cmd/api
 
 dev-web:
-	cd apps/web && npm run dev
+	cd apps/web && PORT=3000 npm run dev
 
 build-api:
 	cd apps/api && go build -o bin/api ./cmd/api

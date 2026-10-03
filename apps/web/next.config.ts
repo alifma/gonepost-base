@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // the dev "N" badge sits on top of the sidebar footer
+  devIndicators: false,
   experimental: {
     externalDir: true
   },

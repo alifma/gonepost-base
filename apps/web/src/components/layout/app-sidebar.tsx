@@ -32,12 +32,20 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
 import { Icons } from '@/components/icons';
+import { useQuery } from '@tanstack/react-query';
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
   const router = useRouter();
   const filteredGroups = useFilteredNavGroups(navGroups);
+  const me = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => (await api.GET('/api/v1/auth/me', { credentials: 'include' })).data ?? null,
+    staleTime: 5 * 60 * 1000
+  });
+  const displayName = me.data?.full_name || me.data?.username || me.data?.email || 'Account';
+  const initial = displayName.charAt(0).toUpperCase();
 
   async function logout() {
     await api.POST('/api/v1/auth/logout', { credentials: 'include' });
@@ -50,7 +58,16 @@ export default function AppSidebar() {
 
   return (
     <Sidebar collapsible='icon'>
-      <SidebarHeader />
+      <SidebarHeader>
+        <Link href='/dashboard/overview' className='flex items-center gap-2 px-1 py-1.5' aria-label='Gonepost'>
+          <span className='bg-foreground text-background flex size-8 shrink-0 items-center justify-center rounded-lg group-data-[collapsible=icon]:size-7'>
+            <Icons.logo className='size-4' />
+          </span>
+          <span className='text-sm font-semibold tracking-[0.2em] uppercase group-data-[collapsible=icon]:hidden'>
+            Gonepost
+          </span>
+        </Link>
+      </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
         {filteredGroups.map((group) => (
           <SidebarGroup key={group.label || 'ungrouped'} className='py-0'>
@@ -121,8 +138,16 @@ export default function AppSidebar() {
                   />
                 }
               >
-                <span className='truncate'>Account</span>
-                <Icons.chevronsDown className='ml-auto size-4' />
+                <span className='bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold'>
+                  {initial}
+                </span>
+                <span className='grid min-w-0 flex-1 text-left leading-tight'>
+                  <span className='truncate text-sm font-semibold'>{displayName}</span>
+                  {me.data?.email && me.data.email !== displayName && (
+                    <span className='text-muted-foreground truncate text-xs'>{me.data.email}</span>
+                  )}
+                </span>
+                <Icons.chevronsUpDown className='ml-auto size-4' />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className='w-(--anchor-width) min-w-56 rounded-lg'
@@ -132,13 +157,18 @@ export default function AppSidebar() {
               >
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className='p-0 font-normal'>
-                    <div className='text-muted-foreground px-1 py-1.5 text-sm'>
-                      Sign in to manage your account
+                    <div className='px-1 py-1.5 text-sm'>
+                      <div className='text-muted-foreground text-xs'>Signed in as</div>
+                      <div className='truncate font-semibold'>{me.data?.email ?? displayName}</div>
                     </div>
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                    <Icons.settings className='mr-2 h-4 w-4' />
+                    Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => void logout()}>
                     <Icons.logout className='mr-2 h-4 w-4' />
                     Sign out

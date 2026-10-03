@@ -7,7 +7,7 @@ MIGRATIONS_DIR := apps/api/migrations
 .PHONY: db-up db-down db-logs \
 	dev-api build-api lint-api test-api test-integration-api \
 	dev-web \
-	db-migrate db-rollback db-status db-migrate-create db-seed \
+	db-migrate db-migrate-test db-rollback db-status db-migrate-create db-seed \
 	openapi-generate api-client-generate openapi-validate
 
 ## --- Local dependencies ---
@@ -46,6 +46,10 @@ test-integration-api:
 db-migrate:
 	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" up
 
+# apply migrations to the integration-test database (TEST_DATABASE_URL, port 5433)
+db-migrate-test:
+	migrate -path $(MIGRATIONS_DIR) -database "$(TEST_DATABASE_URL)" up
+
 db-rollback:
 	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down 1
 
@@ -65,9 +69,9 @@ db-seed:
 openapi-generate:
 	cd apps/api && go generate ./...
 
-# Regenerate the TypeScript client in packages/api-client
+# Regenerate the TypeScript client in packages/api-client and build dist/ (apps/web imports the built dist/)
 api-client-generate:
-	cd packages/api-client && npm run generate
+	cd packages/api-client && npm run generate && npm run build
 
 # Fail if the spec changed but generated code wasn't regenerated (CI check).
 # Regenerates into a temp copy and diffs against what's committed.

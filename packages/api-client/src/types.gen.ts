@@ -276,6 +276,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Permission codes the current user holds (for showing menus and guarding pages) */
+        get: operations["getMyPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's items (paginated, searchable, filterable by status). Needs items:read. */
+        get: operations["listItems"];
+        put?: never;
+        /** Create an item. Needs items:write. */
+        post: operations["createItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one of the caller's items. Needs items:read. */
+        get: operations["getItem"];
+        put?: never;
+        post?: never;
+        /** Delete an item. Needs items:write. */
+        delete: operations["deleteItem"];
+        options?: never;
+        head?: never;
+        /** Replace an item's fields. Needs items:write. */
+        patch: operations["updateItem"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -376,6 +430,37 @@ export interface components {
         };
         AuditLogListResponse: {
             data: components["schemas"]["AuditLogEvent"][];
+            total: number;
+            limit: number;
+        };
+        PermissionList: {
+            /**
+             * @example [
+             *       "items:read",
+             *       "items:write"
+             *     ]
+             */
+            permissions: string[];
+        };
+        /** @enum {string} */
+        ItemStatus: "active" | "archived";
+        Item: {
+            id: string;
+            name: string;
+            description?: string;
+            status: components["schemas"]["ItemStatus"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ItemInput: {
+            name: string;
+            description?: string;
+            status?: components["schemas"]["ItemStatus"];
+        };
+        ItemListResponse: {
+            data: components["schemas"]["Item"][];
             total: number;
             limit: number;
         };
@@ -1006,6 +1091,197 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditLogListResponse"];
+                };
+            };
+        };
+    };
+    getMyPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permissions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionList"];
+                };
+            };
+            /** @description Not logged in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listItems: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ItemStatus"];
+                search?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated item list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemListResponse"];
+                };
+            };
+        };
+    };
+    createItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    getItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemInput"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
                 };
             };
         };

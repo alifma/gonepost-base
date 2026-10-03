@@ -1,6 +1,8 @@
 # Gonepost
 
-**Go** + **Next.js** + **Postgres** — production baseline dengan auth, RBAC, dan audit-log built in. Frontend (`apps/web`) belum digarap.
+**Go** + **Next.js** + **Postgres** — production baseline dengan auth, RBAC, dan audit-log built in. Ada contoh fitur CRUD lengkap (`items`) buat disalin.
+
+**Mau nambah fitur atau route baru?** Ikuti [docs/guides/adding-a-feature.md](docs/guides/adding-a-feature.md).
 
 ## Prerequisites
 
@@ -48,11 +50,16 @@ make db-migrate
 # 3. Seed data awal (permission, role SUPER_ADMIN, user admin@example.com/changeme123)
 make db-seed
 
-# 4. Install dependency Go module
+# 4. (buat integration test) Apply schema ke test db
+make db-migrate-test
+
+# 5. Install dependency Go module
 cd apps/api && go build ./... && cd ../..
 
-# 5. (opsional) Install dependency TypeScript client
+# 6. Install dependency TypeScript client + web
 cd packages/api-client && npm install && cd ../..
+make api-client-generate   # build packages/api-client/dist (web import dari sini)
+cd apps/web && npm install && cd ../..
 ```
 
 ## Jalanin API
@@ -81,6 +88,7 @@ make db-up / make db-down / make db-logs
 # Development
 make dev-api
 make dev-web
+make dev-web
 
 # Quality
 make lint-api
@@ -88,7 +96,7 @@ make test-api               # unit test, gak butuh DB
 make test-integration-api   # + integration test (butuh db-up)
 
 # Database
-make db-migrate / make db-rollback / make db-status
+make db-migrate / make db-migrate-test / make db-rollback / make db-status
 make db-migrate-create name=xxx  # bikin migration baru
 make db-seed
 
@@ -102,12 +110,12 @@ make openapi-validate       # gagal kalau spec berubah tapi belum di-regenerate
 
 ```text
 apps/
-├── web/          # Next.js dashboard (belum digarap)
+├── web/          # Next.js dashboard (users, roles, audit logs, items)
 └── api/          # Go API — satu-satunya yang boleh akses PostgreSQL
     ├── cmd/api/           # entry point
     ├── internal/
     │   ├── platform/      # infra generik (db, http, logger, security, dst)
-    │   └── modules/        # domain: auth, users, roles, permissions, auditlog
+    │   └── modules/        # domain: auth, users, roles, permissions, auditlog, items (contoh CRUD)
     ├── migrations/
     ├── openapi/           # kontrak API — source of truth
     └── seeds/
@@ -120,3 +128,11 @@ docs/
 ```
 
 `apps/web` cuma boleh manggil API lewat `packages/api-client` — gak ada akses database langsung dari frontend. Otorisasi backend selalu jadi sumber kebenaran; permission check di frontend (kalau ada nanti) cuma buat UX.
+
+## RBAC
+
+Permission itu kode `resource:action` (`users:read`, `items:write`, ...), didefinisikan di `apps/api/internal/modules/permissions`. Role = kumpulan permission, user bisa punya banyak role.
+
+- **SUPER_ADMIN** — semua permission. **MEMBER** — permission fitur (`items:*`), tanpa admin. Keduanya dibuat `make db-seed`.
+- API: `roles.RequirePermission(...)` per route. Web: `GET /api/v1/auth/permissions` -> `access.permission` di `nav-config.ts` nyembunyiin menu dan `RouteGuard` ngeblok halaman.
+- Kasih akses: login sebagai admin, buka **Users**, assign role.

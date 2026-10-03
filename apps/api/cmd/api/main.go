@@ -13,6 +13,7 @@ import (
 	"basecode/api/internal/middleware"
 	"basecode/api/internal/modules/auditlog"
 	"basecode/api/internal/modules/auth"
+	"basecode/api/internal/modules/items"
 	"basecode/api/internal/modules/permissions"
 	"basecode/api/internal/modules/roles"
 	"basecode/api/internal/modules/users"
@@ -68,6 +69,12 @@ func main() {
 	requireRolesRead := roles.RequirePermission(authz, auditService, permissions.RolesRead)
 	requireRolesWrite := roles.RequirePermission(authz, auditService, permissions.RolesWrite)
 	requireAuditRead := roles.RequirePermission(authz, auditService, permissions.AuditRead)
+	requireItemsRead := roles.RequirePermission(authz, auditService, permissions.ItemsRead)
+	requireItemsWrite := roles.RequirePermission(authz, auditService, permissions.ItemsWrite)
+
+	// modul items: contoh CRUD (salin pola ini buat fitur baru — lihat docs/guides/adding-a-feature.md)
+	itemsRepo := items.NewRepository(pool)
+	itemsHandler := items.NewHandler(itemsRepo, auditService)
 
 	// bikin router HTTP untuk daftarin endpoint HTTP
 	mux := http.NewServeMux()
@@ -93,6 +100,23 @@ func main() {
 	mux.Handle("POST /api/v1/auth/bootstrap-admin", requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, _ := authctx.UserIDFromContext(r.Context())
 		rolesHandler.BootstrapSuperAdmin(w, r, userID)
+	})))
+
+	// permission milik user yang login — dipakai web buat nampilin menu dan jaga halaman
+	mux.Handle("GET /api/v1/auth/permissions", requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, _ := authctx.UserIDFromContext(r.Context())
+		held := []string{}
+		for _, code := range permissions.All {
+			ok, err := authz.Can(r.Context(), userID, code)
+			if err != nil {
+				httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "something went wrong")
+				return
+			}
+			if ok {
+				held = append(held, code)
+			}
+		}
+		httpx.WriteJSON(w, http.StatusOK, openapigen.PermissionList{Permissions: held})
 	})))
 
 	// user endpoints — butuh login + permission users:read / users:write
@@ -129,6 +153,10 @@ func main() {
 
 	// audit log endpoint — read-only, permission-protected
 	mux.Handle("GET /api/v1/audit-logs", requireAuth(requireAuditRead(http.HandlerFunc(auditHandler.List))))
+
+	// item endpoints — butuh login + items:read (GET) / items:write (lainnya),
+	// data otomatis dibatasi ke user yang login
+	itemsHandler.Register(mux, requireAuth, requireItemsRead, requireItemsWrite)
 
 	handler := http.Handler(mux)
 	handler = middleware.SecurityHeaders(handler)

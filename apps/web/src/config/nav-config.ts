@@ -30,6 +30,11 @@ import { NavGroup } from '@/types';
  * 6. Multiple conditions (all must be true):
  *    access: { requireOrg: true, permission: 'org:teams:manage', plan: 'pro' }
  *
+ * 7. Gate by RBAC permission (code from the API's permission list):
+ *    access: { permission: 'items:read' }
+ *    The sidebar and Cmd+K hide the item, and RouteGuard blocks the page
+ *    (and sub-pages) from this same entry. Add one entry per page here.
+ *
  * Note: The `visible` function is deprecated but still supported for backward compatibility.
  * Use the `access` property for new items.
  */
@@ -46,12 +51,22 @@ export const navGroups: NavGroup[] = [
         items: []
       },
       {
+        title: 'Items',
+        url: '/dashboard/items',
+        icon: 'product',
+        shortcut: ['i', 'i'],
+        isActive: false,
+        items: [],
+        access: { permission: 'items:read' }
+      },
+      {
         title: 'Users',
         url: '/dashboard/users',
         icon: 'teams',
         shortcut: ['u', 'u'],
         isActive: false,
-        items: []
+        items: [],
+        access: { permission: 'users:read' }
       },
       {
         title: 'Roles',
@@ -59,7 +74,8 @@ export const navGroups: NavGroup[] = [
         icon: 'lock',
         shortcut: ['r', 'r'],
         isActive: false,
-        items: []
+        items: [],
+        access: { permission: 'roles:read' }
       },
       {
         title: 'Audit Logs',
@@ -67,7 +83,8 @@ export const navGroups: NavGroup[] = [
         icon: 'clock',
         shortcut: ['a', 'l'],
         isActive: false,
-        items: []
+        items: [],
+        access: { permission: 'audit:read' }
       }
     ]
   },

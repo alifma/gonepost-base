@@ -1,6 +1,7 @@
 // Command seeds populates local/dev Postgres with:
 //   - every known permission (from internal/modules/permissions)
 //   - the SUPER_ADMIN system role, granted all permissions
+//   - the MEMBER system role, granted the feature permissions (memberPermissions)
 //   - a starter user, made SUPER_ADMIN
 //
 // Idempotent — safe to run multiple times.
@@ -23,6 +24,13 @@ const (
 	seedEmail    = "admin@example.com"
 	seedPassword = "changeme123"
 )
+
+// memberPermissions is what the MEMBER role gets: use the features, no admin.
+// Add the read/write pair of every new feature here.
+var memberPermissions = []string{
+	permissions.ItemsRead,
+	permissions.ItemsWrite,
+}
 
 func main() {
 	ctx := context.Background()
@@ -68,7 +76,28 @@ func main() {
 		}
 	}
 
-	// 3. starter user exists and is SUPER_ADMIN
+	// 3. MEMBER role exists with the feature permissions — assign it to
+	// every regular user of the app.
+	member, err := rolesRepo.GetByName(ctx, roles.MemberRole)
+	if err != nil {
+		desc := "use the app's features on own data"
+		member, err = rolesRepo.CreateSystemRole(ctx, roles.MemberRole, &desc)
+		if err != nil {
+			log.Fatalf("failed to create MEMBER role: %v", err)
+		}
+		fmt.Println("seed: created role", roles.MemberRole)
+	}
+	for _, code := range memberPermissions {
+		perm, err := rolesRepo.GetPermissionByCode(ctx, code)
+		if err != nil {
+			log.Fatalf("failed to look up permission %s: %v", code, err)
+		}
+		if err := rolesRepo.GrantPermission(ctx, member.ID, perm.ID); err != nil {
+			log.Fatalf("failed to grant %s to MEMBER: %v", code, err)
+		}
+	}
+
+	// 4. starter user exists and is SUPER_ADMIN
 	var userID string
 	err = pool.QueryRow(ctx, "SELECT id FROM users WHERE lower(email) = lower($1)", seedEmail).Scan(&userID)
 	if err != nil {

@@ -24,6 +24,9 @@ const (
 	ActionUserRoleAssign   = "role.user_assign"
 	ActionUserRoleRemove   = "role.user_remove"
 	ActionAuthzDenied      = "authz.denied"
+	ActionItemCreate       = "item.create"
+	ActionItemUpdate       = "item.update"
+	ActionItemDelete       = "item.delete"
 )
 
 type Event struct {

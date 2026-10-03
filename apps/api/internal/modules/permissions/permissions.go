@@ -11,6 +11,12 @@ const (
 	RolesRead  = "roles:read"
 	RolesWrite = "roles:write"
 	AuditRead  = "audit:read"
+
+	// Items is the reference CRUD module (see docs/guides/adding-a-feature.md).
+	// Data is always scoped to the caller; these decide who may use the
+	// feature at all (read) and change data (write).
+	ItemsRead  = "items:read"
+	ItemsWrite = "items:write"
 )
 
 // All is every known permission code — used by the seed script to make sure
@@ -22,4 +28,6 @@ var All = []string{
 	RolesRead,
 	RolesWrite,
 	AuditRead,
+	ItemsRead,
+	ItemsWrite,
 }

@@ -27,21 +27,39 @@ func (e AuditLogEventResult) Valid() bool {
 	}
 }
 
+// Defines values for ItemStatus.
+const (
+	ItemStatusActive   ItemStatus = "active"
+	ItemStatusArchived ItemStatus = "archived"
+)
+
+// Valid indicates whether the value is a known member of the ItemStatus enum.
+func (e ItemStatus) Valid() bool {
+	switch e {
+	case ItemStatusActive:
+		return true
+	case ItemStatusArchived:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UserStatus.
 const (
-	Active    UserStatus = "active"
-	Inactive  UserStatus = "inactive"
-	Suspended UserStatus = "suspended"
+	UserStatusActive    UserStatus = "active"
+	UserStatusInactive  UserStatus = "inactive"
+	UserStatusSuspended UserStatus = "suspended"
 )
 
 // Valid indicates whether the value is a known member of the UserStatus enum.
 func (e UserStatus) Valid() bool {
 	switch e {
-	case Active:
+	case UserStatusActive:
 		return true
-	case Inactive:
+	case UserStatusInactive:
 		return true
-	case Suspended:
+	case UserStatusSuspended:
 		return true
 	default:
 		return false
@@ -113,10 +131,43 @@ type GrantPermissionRequest struct {
 	Code string `json:"code"`
 }
 
+// Item defines model for Item.
+type Item struct {
+	CreatedAt   time.Time  `json:"created_at"`
+	Description *string    `json:"description,omitempty"`
+	Id          string     `json:"id"`
+	Name        string     `json:"name"`
+	Status      ItemStatus `json:"status"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
+// ItemInput defines model for ItemInput.
+type ItemInput struct {
+	Description *string     `json:"description,omitempty"`
+	Name        string      `json:"name"`
+	Status      *ItemStatus `json:"status,omitempty"`
+}
+
+// ItemListResponse defines model for ItemListResponse.
+type ItemListResponse struct {
+	Data  []Item `json:"data"`
+	Limit int    `json:"limit"`
+	Total int    `json:"total"`
+}
+
+// ItemStatus defines model for ItemStatus.
+type ItemStatus string
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Email    openapi_types.Email `json:"email"`
 	Password string              `json:"password"`
+}
+
+// PermissionList defines model for PermissionList.
+type PermissionList struct {
+	// Permissions Example: ["items:read","items:write"]
+	Permissions []string `json:"permissions"`
 }
 
 // Role defines model for Role.
@@ -181,6 +232,14 @@ type ListAuditLogsParams struct {
 	Offset      *int    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// ListItemsParams defines parameters for ListItems.
+type ListItemsParams struct {
+	Status *ItemStatus `form:"status,omitempty" json:"status,omitempty"`
+	Search *string     `form:"search,omitempty" json:"search,omitempty"`
+	Limit  *int        `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int        `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Status *UserStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -194,6 +253,12 @@ type LoginJSONRequestBody = LoginRequest
 
 // ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
 type ChangePasswordJSONRequestBody = ChangePasswordRequest
+
+// CreateItemJSONRequestBody defines body for CreateItem for application/json ContentType.
+type CreateItemJSONRequestBody = ItemInput
+
+// UpdateItemJSONRequestBody defines body for UpdateItem for application/json ContentType.
+type UpdateItemJSONRequestBody = ItemInput
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody = CreateRoleRequest

@@ -30,3 +30,6 @@ Thumbs.db
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea/
+
+# Claude Code guidance, kept local (manual)
+CLAUDE.md

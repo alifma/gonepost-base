@@ -509,6 +509,157 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuditLogListResponse"
 
+  /api/v1/auth/permissions:
+    get:
+      operationId: getMyPermissions
+      summary: Permission codes the current user holds (for showing menus and guarding pages)
+      tags: [auth]
+      responses:
+        "200":
+          description: Permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionList"
+        "401":
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/items:
+    get:
+      operationId: listItems
+      summary: List the caller's items (paginated, searchable, filterable by status). Needs items:read.
+      tags: [items]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ItemStatus"
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated item list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemListResponse"
+    post:
+      operationId: createItem
+      summary: Create an item. Needs items:write.
+      tags: [items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+
+  /api/v1/items/{id}:
+    get:
+      operationId: getItem
+      summary: Get one of the caller's items. Needs items:read.
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateItem
+      summary: Replace an item's fields. Needs items:write.
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+    delete:
+      operationId: deleteItem
+      summary: Delete an item. Needs items:write.
+      tags: [items]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     sessionCookie:
@@ -718,6 +869,63 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AuditLogEvent"
+        total:
+          type: integer
+        limit:
+          type: integer
+
+    PermissionList:
+      type: object
+      required: [permissions]
+      properties:
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ["items:read", "items:write"]
+
+    ItemStatus:
+      type: string
+      enum: [active, archived]
+
+    Item:
+      type: object
+      required: [id, name, status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ItemStatus"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ItemInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/ItemStatus"
+
+    ItemListResponse:
+      type: object
+      required: [data, total, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
         total:
           type: integer
         limit:

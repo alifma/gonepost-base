@@ -10,7 +10,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 type Role = components['schemas']['Role'];
-const permissions = ['users:read', 'users:write', 'roles:read', 'roles:write', 'audit:read'];
+const permissions = ['users:read', 'users:write', 'roles:read', 'roles:write', 'audit:read', 'items:read', 'items:write'];
+// ^ keep in sync with apps/api/internal/modules/permissions (add new feature codes here)
 
 export default function ApiRolesPanel() {
   const [roles, setRoles] = useState<Role[]>([]);
